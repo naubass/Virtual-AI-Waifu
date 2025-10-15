@@ -1,52 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WaifuChat AI - Your AI Companion</title>
+    <title>WaifuChat AI - Sistem Rekomendasi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
-    /* ... (CSS Anda yang sudah ada) ... */
-
-    /* UBAH: Tambahkan Keyframes & Class Baru di Bawah Ini */
-    @keyframes image-fade {
-        0%, 100% { opacity: 0; }
-        15%, 85% { opacity: 1; }
-    }
-
-    .character-slide img {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        opacity: 0;
-        animation: image-fade 12s infinite;
-    }
-
-    @keyframes text-focus-in {
-        0% {
-            filter: blur(12px);
+        body { font-family: 'M PLUS Rounded 1c', sans-serif; scroll-behavior: smooth; }
+        #chat-log::-webkit-scrollbar { width: 8px; }
+        #chat-log::-webkit-scrollbar-track { background: #fce7f3; }
+        #chat-log::-webkit-scrollbar-thumb { background: #f472b6; border-radius: 10px; }
+        #chat-log::-webkit-scrollbar-thumb:hover { background: #ec4899; }
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background-color: #9ca3af;
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+        .brand-gradient {
+            background-image: linear-gradient(to right, #ec4899, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        /* Styling untuk hero section image fader */
+        #hero-image-container {
+            position: relative;
+            width: 320px; /* Lebar tetap untuk konsistensi */
+            height: 320px;
+        }
+        #hero-image-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            transition: opacity 1s ease-in-out;
             opacity: 0;
-            transform: translateX(-10%);
+            border: 4px solid white;
+            box-shadow: 0 10px 25px rgba(236, 72, 153, 0.2);
         }
-        100% {
-            filter: blur(0px);
+        #hero-image-container img.active {
             opacity: 1;
-            transform: translateX(0);
         }
-    }
-
-    .text-focus-in {
-        animation: text-focus-in 1s cubic-bezier(0.550, 0.085, 0.680, 0.530) both;
-    }
-</style>
+    </style>
 </head>
 <body class="bg-pink-50 text-gray-800">
 
@@ -58,179 +70,409 @@
                         WaifuChat AI
                     </span>
                 </a>
-                <div class="hidden md:flex items-center space-x-4">
-                    <a href="#character-selection" class="text-gray-600 hover:text-pink-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Characters</a>
-                    <a href="https://github.com" target="_blank" class="bg-pink-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-pink-600 transition-colors flex items-center gap-2">
-                        <i class="fab fa-github"></i> GitHub
-                    </a>
+                <div id="user-info" class="hidden items-center space-x-4">
+                    <span id="user-email" class="text-sm text-gray-600 font-medium"></span>
+                    <button id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-red-600 transition-colors">
+                        Logout
+                    </button>
                 </div>
             </div>
         </div>
     </nav>
-
-    <main id="main-content">
-        <section class="relative pt-16 overflow-hidden">
-    <div class="w-full min-h-[85vh] animated-gradient flex items-center">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                
-                <div class="text-center md:text-left text-focus-in">
-                    <h1 class="text-5xl lg:text-7xl font-extrabold text-gray-800 leading-tight">
-                        Temukan Sahabat
-                        <span class="bg-gradient-to-r from-pink-500 to-purple-500 text-transparent bg-clip-text">
-                            AI Impianmu
-                        </span>
-                    </h1>
-                    <p class="mt-6 text-lg text-gray-600 max-w-lg mx-auto md:mx-0">
-                        Masuki dunia di mana setiap percakapan menjadi petualangan. Ngobrol, tertawa, dan ciptakan kenangan bersama karakter AI yang dirancang khusus untukmu.
-                    </p>
-                    <a href="#character-selection" class="mt-10 inline-block bg-pink-500 text-white font-bold py-4 px-10 rounded-full text-lg hover:bg-pink-600 transition-transform transform hover:scale-105 shadow-lg">
-                        Mulai Sekarang <i class="fas fa-chevron-right ml-2 text-sm"></i>
-                    </a>
-                </div>
-
-                <div class="relative flex justify-center items-center h-full">
-                    <div class="relative w-80 h-80 lg:w-96 lg:h-96 rounded-full shadow-2xl shadow-pink-300/60 p-4 bg-white/30">
-                        <div class="character-slide w-full h-full rounded-full overflow-hidden relative">
-                            <img src="photo/waifu.jpg" alt="Character Slide 1" style="animation-delay: 0s;">
-                            <img src="photo/waifu2.jpg" alt="Character Slide 2" style="animation-delay: 4s;">
-                            <img src="photo/waifu3.jpg" alt="Character Slide 3" style="animation-delay: 8s;">
+    
+    <main id="main-content" class="hidden pt-16">
+        
+        <!-- HERO SECTION BARU DENGAN HIASAN GELOMBANG -->
+        <section id="hero-section" class="bg-pink-100/50 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 relative z-10">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <!-- Kolom Kiri: Teks -->
+                    <div class="text-center md:text-left">
+                        <h1 class="text-5xl md:text-6xl font-extrabold text-gray-800 leading-tight">
+                            Temukan Sahabat <span class="brand-gradient">AI</span> <br class="hidden md:block"> Impianmu
+                        </h1>
+                        <p class="mt-6 text-lg text-gray-600 max-w-lg mx-auto md:mx-0">
+                            Masuki dunia di mana setiap percakapan menjadi petualangan. Ngobrol, tertawa, dan ciptakan kenangan bersama karakter AI yang dirancang khusus untukmu.
+                        </p>
+                        <div class="mt-8 flex flex-wrap items-center justify-center md:justify-start gap-4">
+                            <a href="#character-selection" class="inline-block text-white font-bold py-3 px-8 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 transition transform hover:scale-105 shadow-lg">
+                                Jelajahi Karakter <i class="fas fa-arrow-right ml-2"></i>
+                            </a>
+                            <a href="#" class="inline-block text-white font-bold py-3 px-8 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 transition transform hover:scale-105 shadow-lg">
+                                Tentang Proyek
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Kolom Kanan: Gambar Dinamis -->
+                    <div class="flex justify-center items-center">
+                        <div id="hero-image-container">
+                            <!-- Gambar akan dimasukkan oleh JavaScript -->
                         </div>
                     </div>
                 </div>
-
             </div>
-        </div>
-    </div>
-    <div class="absolute bottom-0 left-0 w-full leading-none">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="#fdf2f8" fill-opacity="1" d="M0,192L48,176C96,160,192,128,288,133.3C384,139,480,181,576,208C672,235,768,245,864,218.7C960,192,1056,128,1152,117.3C1248,107,1344,149,1392,170.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>
-    </div>
-</section>
+            <!-- Hiasan Gelombang SVG -->
+            <div class="absolute bottom-0 left-0 w-full leading-none z-0" style="transform: translateY(1px);">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="#faf5ff" fill-opacity="1" d="M0,192L48,176C96,160,192,128,288,133.3C384,139,480,181,576,208C672,235,768,245,864,218.7C960,192,1056,128,1152,117.3C1248,107,1344,149,1392,170.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>
+            </div>
+        </section>
+
+        <section id="recommendation-section" class="py-20 px-4 bg-purple-50">
+             <div class="max-w-7xl mx-auto">
+                 <div class="text-center mb-12">
+                     <h2 class="text-4xl font-bold mb-4">
+                         <i class="fas fa-star text-yellow-400 mr-2"></i> Rekomendasi Untukmu
+                     </h2>
+                     <p class="text-lg text-gray-600">Berdasarkan interaksimu, kami pikir kamu akan suka karakter ini!</p>
+                 </div>
+                 <div id="recommendation-grid" class="flex flex-wrap justify-center gap-8">
+                 </div>
+             </div>
+        </section>
+
         <section id="character-selection" class="py-24 px-4 bg-pink-50">
             <div class="max-w-7xl mx-auto">
                 <div class="text-center mb-16">
                     <h2 class="text-4xl font-bold mb-4">
-                        <i class="fas fa-heart text-pink-400 mr-2"></i> Choose Your Character
+                        <i class="fas fa-heart text-pink-400 mr-2"></i> Semua Karakter
                     </h2>
-                    <p class="text-lg text-gray-600">Select a character below to begin your conversation.</p>
+                    <p class="text-lg text-gray-600">Pilih karakter untuk memulai percakapan.</p>
                 </div>
-                <div id="waifu-grid" class="flex flex-wrap justify-center gap-5">
-                    <div class="bg-white rounded-xl shadow-lg animate-pulse">
-                        <div class="w-full h-64 bg-gray-200 rounded-t-xl"></div>
-                        <div class="p-6">
-                            <div class="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-                            <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
-                            <div class="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
-                            <div class="h-12 bg-gray-200 rounded-full w-full"></div>
-                        </div>
-                    </div>
+                <div id="waifu-grid" class="flex flex-wrap justify-center gap-8">
                 </div>
             </div>
         </section>
-        <footer class="bg-white py-8 px-4 border-t border-pink-100">
-            <div class="max-w-7xl mx-auto text-center text-gray-500">
-                <p>&copy; 2025 WaifuChat AI. All Rights Reserved.</p>
-                <p class="mt-2 text-sm">Created with <i class="fas fa-heart text-pink-500"></i> for you.</p>
-            </div>
-        </footer>
     </main>
     
-    <section id="chat-interface" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm invisible opacity-0 transition-opacity duration-300">
-        
-        <div id="chat-window" class="w-full max-w-2xl h-[90vh] max-h-[700px] bg-pink-50 rounded-2xl shadow-xl flex flex-col transform scale-95 transition-transform duration-300">
+    <!-- AUTH MODAL REDESIGNED WITH IMAGE -->
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-4xl grid md:grid-cols-2 rounded-2xl shadow-xl overflow-hidden transition-all transform scale-100">
             
+            <!-- Kolom Kiri: Gambar (Disembunyikan di layar kecil) -->
+            <div class="hidden md:block relative">
+                <img src="photo/waifu4.jpg" alt="WaifuChat AI Illustration" class="h-full w-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-purple-800/30 to-transparent"></div>
+            </div>
+
+            <!-- Kolom Kanan: Form -->
+            <div class="p-8 flex flex-col justify-center">
+                <!-- Login Form -->
+                <form id="login-form">
+                    <h2 class="text-3xl font-bold text-center mb-2">Selamat Datang!</h2>
+                    <p class="text-center text-gray-500 mb-6">Login untuk melanjutkan ke <span class="brand-gradient font-bold">WaifuChat AI</span></p>
+                    <div id="login-error" class="text-red-500 text-sm mb-4 text-center hidden h-5"></div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="login-email" class="block mb-1 text-sm font-medium text-gray-600">Email</label>
+                            <input type="email" id="login-email" placeholder="kamu@email.com" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 transition" required>
+                        </div>
+                        <div>
+                            <label for="login-password" class="block mb-1 text-sm font-medium text-gray-600">Password</label>
+                            <div class="relative">
+                                <input type="password" id="login-password" placeholder="••••••••" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 transition" required>
+                                <button type="button" onclick="togglePasswordVisibility('login-password')" class="absolute inset-y-0 right-0 px-4 text-gray-500 hover:text-pink-500">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full text-white font-bold py-3 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 transition transform hover:scale-105 shadow-lg">Login</button>
+                    </div>
+                    
+                    <p class="text-center text-sm mt-6">
+                        Belum punya akun? <a href="#" id="show-register" class="font-bold text-pink-500 hover:underline">Daftar di sini</a>
+                    </p>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form" class="hidden">
+                    <h2 class="text-3xl font-bold text-center mb-2">Buat Akun</h2>
+                    <p class="text-center text-gray-500 mb-6">Bergabunglah dengan <span class="brand-gradient font-bold">WaifuChat AI</span></p>
+                     <div id="register-error" class="text-red-500 text-sm mb-4 text-center hidden h-5"></div>
+                     
+                     <div class="space-y-4">
+                        <div>
+                            <label for="register-nama" class="block mb-1 text-sm font-medium text-gray-600">Nama Lengkap</label>
+                            <input type="text" id="register-nama" placeholder="Nama Kamu" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                        </div>
+                        <div>
+                            <label for="register-nim" class="block mb-1 text-sm font-medium text-gray-600">NIM</label>
+                            <input type="text" id="register-nim" placeholder="Nomor Induk Mahasiswa" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                        </div>
+                        <div>
+                            <label for="register-email" class="block mb-1 text-sm font-medium text-gray-600">Email</label>
+                            <input type="email" id="register-email" placeholder="Email aktif" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                        </div>
+                        <div>
+                            <label for="register-password" class="block mb-1 text-sm font-medium text-gray-600">Password</label>
+                            <div class="relative">
+                                <input type="password" id="register-password" placeholder="Buat password yang kuat" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                                <button type="button" onclick="togglePasswordVisibility('register-password')" class="absolute inset-y-0 right-0 px-4 text-gray-500 hover:text-pink-500">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full text-white font-bold py-3 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 transition transform hover:scale-105 shadow-lg">Register</button>
+                    </div>
+
+                    <p class="text-center text-sm mt-6">
+                        Sudah punya akun? <a href="#" id="show-login" class="font-bold text-purple-500 hover:underline">Login di sini</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <section id="chat-interface" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm invisible opacity-0 transition-opacity duration-300">
+        <div id="chat-window" class="w-full max-w-2xl h-[90vh] max-h-[700px] bg-pink-50 rounded-2xl shadow-xl flex flex-col transform scale-95 transition-transform duration-300">
             <header class="bg-white shadow-md p-4 flex items-center justify-between flex-shrink-0 rounded-t-2xl">
                 <div class="flex items-center">
                     <img id="chat-character-img" src="" alt="Character" class="w-12 h-12 rounded-full object-cover mr-4 border-2 border-pink-200">
                     <h3 id="chat-character-name" class="text-xl font-bold"></h3>
                 </div>
-                <button id="back-to-selection-btn" class="text-gray-500 hover:text-pink-500 transition-colors p-2 rounded-full hover:bg-pink-100">
+                <button id="close-chat-btn" class="text-gray-500 hover:text-pink-500 transition-colors p-2 rounded-full hover:bg-pink-100">
                      <i class="fas fa-times fa-lg"></i>
                 </button>
             </header>
-
-            <div id="chat-log" class="flex-grow p-6 overflow-y-auto space-y-6 bg-pink-100/30">
-                </div>
-
+            <div id="chat-log" class="flex-grow p-6 overflow-y-auto space-y-6 bg-pink-100/30"></div>
             <footer class="bg-white p-4 border-t rounded-b-2xl">
                 <form id="chat-form" class="flex items-center space-x-4">
                     <input id="message-input" type="text" placeholder="Type your message..." class="w-full p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-400 transition" autocomplete="off">
-                    <button type="submit" class="bg-pink-500 text-white rounded-full w-12 h-12 flex-shrink-0 flex items-center justify-center hover:bg-pink-600 transition-colors disabled:bg-pink-300 transform hover:scale-110">
+                    <button type="submit" class="bg-pink-500 text-white rounded-full w-12 h-12 flex-shrink-0 flex items-center justify-center hover:bg-pink-600 transition-colors transform hover:scale-110">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </form>
             </footer>
-
         </div>
     </section>
+
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // ===================================
-        // ELEMENT SELECTORS (Tidak ada perubahan)
-        // ===================================
+        // --- ELEMENT SELECTORS ---
+        const mainContent = document.getElementById('main-content');
+        const authModal = document.getElementById('auth-modal');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const showRegisterBtn = document.getElementById('show-register');
+        const showLoginBtn = document.getElementById('show-login');
+        const heroImageContainer = document.getElementById('hero-image-container');
+        const userInfoDiv = document.getElementById('user-info');
+        const userEmailSpan = document.getElementById('user-email');
+        const logoutBtn = document.getElementById('logout-btn');
+        const waifuGrid = document.getElementById('waifu-grid');
+        const recommendationGrid = document.getElementById('recommendation-grid');
         const chatInterface = document.getElementById('chat-interface');
         const chatWindow = document.getElementById('chat-window');
-        const waifuGrid = document.getElementById('waifu-grid');
-        const backToSelectionBtn = document.getElementById('back-to-selection-btn');
+        const closeChatBtn = document.getElementById('close-chat-btn');
         const chatHeaderImg = document.getElementById('chat-character-img');
         const chatHeaderName = document.getElementById('chat-character-name');
         const chatLog = document.getElementById('chat-log');
         const chatForm = document.getElementById('chat-form');
         const messageInput = document.getElementById('message-input');
 
-        // ===================================
-        // APP STATE (Tidak ada perubahan)
-        // ===================================
-        let currentCharacter = null;
-        let conversations = {}; 
 
-        // ===================================
-        // API FUNCTIONS (Tidak ada perubahan)
-        // ===================================
-        async function fetchWaifus() { /* ... */ }
-        async function postChatMessage(history) { /* ... */ }
-        async function fetchWaifus() {
-            try {
-                const response = await fetch('/api/waifu');
-                if (!response.ok) throw new Error('Network response was not ok');
-                return await response.json();
-            } catch (error) {
-                console.error('Failed to fetch waifus:', error);
-                waifuGrid.innerHTML = '<p class="text-red-500 col-span-full text-center">Could not load characters. Please try again later.</p>';
-                return [];
-            }
-        }
-        async function postChatMessage(history) {
-            try {
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        character_id: currentCharacter.id,
-                        messages: history
-                    }),
-                });
-                if (!response.ok) throw new Error('API response was not ok');
-                return await response.json();
-            } catch (error) {
-                console.error('Error sending message:', error);
-                return { content: 'Sorry, I encountered an error. Please try again.' };
-            }
-        }
+        // --- APP STATE ---
+        let conversations = {};
+        let currentCharacter = null;
+        let allWaifusData = [];
+
+        // --- HERO IMAGE FADER ---
+        function startHeroImageFader(waifus) {
+            if (!heroImageContainer || !waifus || waifus.length === 0) return;
+
+            // Ambil 5 gambar acak atau semua jika kurang dari 5
+            const images = waifus.sort(() => 0.5 - Math.random()).slice(0, 5).map(w => w.image);
+            
+            if (images.length === 0) return;
+
+            heroImageContainer.innerHTML = ''; // Clear previous images
+            images.forEach((src, index) => {
+                const img = document.createElement('img');
+                img.src = src;
+                if (index === 0) {
+                    img.classList.add('active');
+                }
+                heroImageContainer.appendChild(img);
+            });
+
+            let currentIndex = 0;
+            setInterval(() => {
+                const allImages = heroImageContainer.querySelectorAll('img');
+                if (allImages.length > 1) {
+                    allImages[currentIndex].classList.remove('active');
+                    currentIndex = (currentIndex + 1) % allImages.length;
+                    allImages[currentIndex].classList.add('active');
+                }
+            }, 4000); // Ganti gambar setiap 4 detik
+        }
+
+        // --- AUTH & INITIALIZATION ---
+        async function initializeApp() {
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                const user = await fetchWithAuth('/users/me');
+                if (user) {
+                    showMainContent(user);
+                } else {
+                    localStorage.removeItem('access_token');
+                    showAuthModal();
+                }
+            } else {
+                showAuthModal();
+            }
+        }
+
+        function showAuthModal() {
+            authModal.style.display = 'flex';
+            mainContent.classList.add('hidden');
+        }
+
+        function showMainContent(user) {
+            authModal.style.display = 'none';
+            mainContent.classList.remove('hidden');
+            userInfoDiv.classList.remove('hidden');
+            userEmailSpan.textContent = user.email;
+            loadAllData();
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const registerErrorDiv = document.getElementById('register-error');
+            registerErrorDiv.classList.add('hidden');
+            const user = {
+                nama: document.getElementById('register-nama').value,
+                nim: document.getElementById('register-nim').value,
+                email: document.getElementById('register-email').value,
+                password: document.getElementById('register-password').value,
+            };
+
+            try {
+                const response = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    let errorMessage = 'Registrasi gagal.';
+                    if (errorData.detail) { errorMessage = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail); }
+                    throw new Error(errorMessage);
+                }
+                alert('Registrasi berhasil! Silakan login.');
+                registerForm.reset();
+                showLoginBtn.click();
+            } catch (error) {
+                registerErrorDiv.textContent = error.message;
+                registerErrorDiv.classList.remove('hidden');
+            }
+        }
         
-        // ===================================
-        // UI & LOGIC FUNCTIONS
-        // ===================================
+        async function handleLogin(e) {
+            e.preventDefault();
+            const loginErrorDiv = document.getElementById('login-error');
+            loginErrorDiv.classList.add('hidden');
+            const formData = new URLSearchParams();
+            formData.append('username', document.getElementById('login-email').value);
+            formData.append('password', document.getElementById('login-password').value);
+            
+            try {
+                const response = await fetch('/auth/jwt/login', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Email atau password salah.');
+                }
+                const data = await response.json();
+                localStorage.setItem('access_token', data.access_token);
+                initializeApp();
+            } catch (error) {
+                loginErrorDiv.textContent = error.message;
+                loginErrorDiv.classList.remove('hidden');
+            }
+        }
         
-        // UBAH: Fungsi displayWaifus dengan desain kartu baru
-        function displayWaifus(waifus) {
-            waifuGrid.innerHTML = ''; // Hapus skeleton loader
+        function handleLogout() {
+            localStorage.removeItem('access_token');
+            window.location.reload();
+        }
+
+        window.togglePasswordVisibility = function(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.closest('.relative').querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                showAuthModal();
+                return null;
+            }
+
+            const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
+
+            try {
+                const response = await fetch(url, { ...options, headers });
+                if (response.status === 401) {
+                    handleLogout();
+                    return null;
+                }
+                if (!response.ok) {
+                    console.error('API request failed:', response.statusText);
+                    return null;
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`Error fetching ${url}:`, error);
+                return null;
+            }
+        }
+        
+        async function loadAllData() {
+            const [recs, waifus] = await Promise.all([
+                fetchWithAuth('/api/recommendations'),
+                fetchWithAuth('/api/waifu')
+            ]);
+            
+            if (!waifus) return; 
+            
+            allWaifusData = waifus; 
+            displayWaifus(waifus, waifuGrid);
+            
+            // Mulai fader setelah data waifu didapatkan
+            startHeroImageFader(waifus);
+
+            if (recs && recs.length > 0) {
+                const recommendedChars = waifus.filter(w => recs.includes(w.id));
+                displayWaifus(recommendedChars, recommendationGrid);
+            } else {
+                recommendationGrid.innerHTML = `<p class="text-gray-500 col-span-full">Belum ada rekomendasi. Mulai chat untuk mendapatkannya!</p>`;
+            }
+        }
+        
+        function displayWaifus(waifus, gridElement) {
+            if(!gridElement) return;
+            gridElement.innerHTML = '';
+            if (!waifus || waifus.length === 0) {
+                 if (gridElement.id === 'recommendation-grid') {
+                    gridElement.innerHTML = `<p class="text-gray-500 col-span-full">Belum ada rekomendasi. Mulai chat untuk mendapatkannya!</p>`;
+                 }
+                 return;
+            }
+
             waifus.forEach(waifu => {
                 const card = document.createElement('div');
-                // Tambahkan 'group' agar kita bisa membuat efek pada gambar saat kartu di-hover
                 card.className = 'w-80 group bg-white rounded-2xl shadow-lg transform hover:-translate-y-2 transition-all duration-300 hover:shadow-2xl hover:shadow-pink-200/50 hover:ring-2 hover:ring-pink-400';
-                
-                // Template HTML baru untuk kartu yang lebih cantik dan seimbang
                 card.innerHTML = `
                     <div class="overflow-hidden rounded-t-2xl h-64">
                         <img src="${waifu.image}" alt="${waifu.name}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out">
@@ -243,19 +485,11 @@
                         </button>
                     </div>
                 `;
-                
                 card.querySelector('.chat-btn').addEventListener('click', () => startChat(waifu));
-                waifuGrid.appendChild(card);
+                gridElement.appendChild(card);
             });
         }
         
-        function startChat(character) { /* ... (Tidak ada perubahan) */ }
-        function closeModal() { /* ... (Tidak ada perubahan) */ }
-        function addMessageToLog(role, content) { /* ... (Tidak ada perubahan) */ }
-        async function handleSendMessage(event) { /* ... (Tidak ada perubahan) */ }
-        function createTypingIndicator() { /* ... (Tidak ada perubahan) */ }
-
-        // Salin sisa fungsi yang tidak berubah dari kode Anda sebelumnya ke sini
         function startChat(character) {
             currentCharacter = character;
             chatHeaderImg.src = character.image;
@@ -267,17 +501,21 @@
                 conversations[character.id] = [{ role: 'ai', content: welcomeMessage }];
             }
 
-            conversations[character.id].forEach(message => {
-                addMessageToLog(message.role, message.content);
-            });
+            conversations[character.id].forEach(message => addMessageToLog(message.role, message.content));
             
             document.body.style.overflow = 'hidden';
             chatInterface.classList.remove('invisible', 'opacity-0');
             chatWindow.classList.remove('scale-95');
             messageInput.focus();
         }
-
-        function closeModal() {
+        
+        async function closeModal() {
+            if (!currentCharacter) return;
+            const userMessagesCount = (conversations[currentCharacter.id] || []).filter(m => m.role === 'human').length;
+            if (userMessagesCount > 0) {
+                await logInteraction(currentCharacter.id, userMessagesCount);
+            }
+            
             chatInterface.classList.add('opacity-0');
             chatWindow.classList.add('scale-95');
             setTimeout(() => {
@@ -286,87 +524,105 @@
                 document.body.style.overflow = '';
             }, 300);
         }
+        
+        async function logInteraction(characterId, messageCount) {
+            const interactionData = {
+                character_id: characterId,
+                message_count: messageCount,
+                timestamp: new Date().toISOString()
+            };
+            await fetchWithAuth('/api/interactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(interactionData)
+            });
+            console.log(`Interaction with ${characterId} (${messageCount} messages) logged.`);
+            const recs = await fetchWithAuth('/api/recommendations');
+             if (recs && recs.length > 0) {
+                const recommendedChars = allWaifusData.filter(w => recs.includes(w.id));
+                displayWaifus(recommendedChars, recommendationGrid);
+            }
+        }
 
         function addMessageToLog(role, content) {
-            const messageWrapper = document.createElement('div');
-            const isHuman = role === 'human';
-            messageWrapper.className = `flex items-end gap-3 ${isHuman ? 'justify-end' : 'justify-start'}`;
-
-            let avatarHtml = '';
-            if (!isHuman) {
-                avatarHtml = `<img src="${currentCharacter.image}" class="w-10 h-10 rounded-full object-cover flex-shrink-0" alt="avatar">`;
-            }
-
-            const messageBubble = document.createElement('div');
-            messageBubble.textContent = content; 
-            messageBubble.className = `max-w-xs md:max-w-md p-3 rounded-2xl shadow ${isHuman 
-                ? 'bg-gradient-to-br from-pink-500 to-fuchsia-500 text-white rounded-br-none' 
-                : 'bg-white text-gray-800 rounded-bl-none'}`;
-            
-            messageWrapper.innerHTML = isHuman ? '' : avatarHtml;
-            messageWrapper.appendChild(messageBubble);
-            chatLog.appendChild(messageWrapper);
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${role === 'human' ? 'justify-end' : 'justify-start'}`;
+            const contentDiv = document.createElement('div');
+            contentDiv.className = `max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${
+                role === 'human'
+                    ? 'bg-pink-500 text-white rounded-br-none'
+                    : 'bg-white text-gray-800 rounded-bl-none shadow-md'
+            }`;
+            contentDiv.textContent = content;
+            messageDiv.appendChild(contentDiv);
+            chatLog.appendChild(messageDiv);
             chatLog.scrollTop = chatLog.scrollHeight;
         }
 
-        async function handleSendMessage(event) {
-            event.preventDefault();
-            const userMessage = messageInput.value.trim();
-            if (!userMessage || !currentCharacter) return;
+        async function handleSendMessage(e) {
+            e.preventDefault();
+            const userInput = messageInput.value.trim();
+            if (!userInput || !currentCharacter) return;
 
-            const currentHistory = conversations[currentCharacter.id];
-            
-            addMessageToLog('human', userMessage);
-            currentHistory.push({ role: 'human', content: userMessage });
             messageInput.value = '';
-            
+            addMessageToLog('human', userInput);
+            conversations[currentCharacter.id].push({ role: 'human', content: userInput });
+
             const typingIndicator = createTypingIndicator();
             chatLog.appendChild(typingIndicator);
             chatLog.scrollTop = chatLog.scrollHeight;
 
-            const aiResponse = await postChatMessage(currentHistory);
-
-            typingIndicator.remove();
-            addMessageToLog('ai', aiResponse.content);
-            currentHistory.push({ role: 'ai', content: aiResponse.content });
+            try {
+                const response = await fetchWithAuth('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        character_id: currentCharacter.id,
+                        messages: conversations[currentCharacter.id]
+                    })
+                });
+                if (response) {
+                    addMessageToLog('ai', response.content);
+                    conversations[currentCharacter.id].push({ role: 'ai', content: response.content });
+                } else {
+                    addMessageToLog('ai', 'Maaf, terjadi kesalahan.');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                addMessageToLog('ai', 'Sepertinya ada masalah koneksi. Coba lagi nanti.');
+            } finally {
+                typingIndicator.remove();
+            }
         }
-        
+
         function createTypingIndicator() {
-            const indicator = document.createElement('div');
-            indicator.className = 'flex items-end gap-3 justify-start';
-            indicator.innerHTML = `
-                <img src="${currentCharacter.image}" class="w-10 h-10 rounded-full object-cover flex-shrink-0" alt="avatar">
-                <div class="bg-white text-gray-800 p-3 rounded-2xl rounded-bl-none shadow">
-                    <div class="flex gap-1 items-center">
-                        <span class="w-2 h-2 bg-gray-300 rounded-full animate-pulse" style="animation-delay: 0s;"></span>
-                        <span class="w-2 h-2 bg-gray-300 rounded-full animate-pulse" style="animation-delay: 0.2s;"></span>
-                        <span class="w-2 h-2 bg-gray-300 rounded-full animate-pulse" style="animation-delay: 0.4s;"></span>
-                    </div>
-                </div>
-            `;
-            return indicator;
+            const messageDiv = document.createElement('div');
+            messageDiv.id = 'typing-indicator';
+            messageDiv.className = 'flex justify-start';
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'px-4 py-3 rounded-2xl bg-white text-gray-800 rounded-bl-none shadow-md';
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = '<span></span><span></span><span></span>';
+            contentDiv.appendChild(typingDiv);
+            messageDiv.appendChild(contentDiv);
+            return messageDiv;
         }
 
-        // ===================================
-        // INITIALIZATION & EVENT LISTENERS (Tidak ada perubahan)
-        // ===================================
-        async function init() {
-            const waifus = await fetchWaifus();
-            if (waifus.length > 0) {
-                displayWaifus(waifus);
-            }
-        }
-
+        // --- EVENT LISTENERS ---
+        loginForm.addEventListener('submit', handleLogin);
+        registerForm.addEventListener('submit', handleRegister);
+        logoutBtn.addEventListener('click', handleLogout);
+        showRegisterBtn.addEventListener('click', (e) => { e.preventDefault(); loginForm.classList.add('hidden'); registerForm.classList.remove('hidden'); });
+        showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); registerForm.classList.add('hidden'); loginForm.classList.remove('hidden'); });
+        closeChatBtn.addEventListener('click', closeModal);
+        chatInterface.addEventListener('click', (e) => { if (e.target === chatInterface) closeModal(); });
         chatForm.addEventListener('submit', handleSendMessage);
-        backToSelectionBtn.addEventListener('click', closeModal);
-        chatInterface.addEventListener('click', (event) => {
-            if (event.target === chatInterface) {
-                closeModal();
-            }
-        });
-
-        init();
+        
+        // --- RUN APP ---
+        initializeApp();
     });
-</script>
+    </script>
 </body>
 </html>
+
