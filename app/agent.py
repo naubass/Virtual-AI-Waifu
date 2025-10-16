@@ -1,23 +1,22 @@
 from typing import TypedDict, Annotated, List
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+from langchain_core.messages import AIMessage, BaseMessage
 from langgraph.graph import StateGraph, END
-
-# ambil WAIFU
-from app.waifu import WAIFU
-
-# env
 import os
 from dotenv import load_dotenv
 
-# initialisasi env
+# Load environment variables dari file .env
 load_dotenv()
 
-# llm
+# Pastikan environment variable GOOGLE_API_KEY sudah diatur
+if "GOOGLE_API_KEY" not in os.environ:
+    raise ValueError("GOOGLE_API_KEY environment variable not set.")
+
+# Inisialisasi LLM
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
-    temperature=0.7,
+    temperature=0.8,
 )
 
 class GraphState(TypedDict):
@@ -25,54 +24,57 @@ class GraphState(TypedDict):
     Mendefinisikan state untuk graph kita.
     
     Args:
-        character_id: ID karakter yang dipilih (misal: "aiko").
-        messages: Daftar pesan dalam percakapan.
+        character_id: ID karakter yang dipilih.
+        messages: Daftar seluruh pesan dalam percakapan.
+        system_prompt: System prompt yang SUDAH diformat dengan nama user.
     """
     character_id: str
     messages: Annotated[List[BaseMessage], "Daftar pesan dalam percakapan"]
+    system_prompt: str  # <-- TAMBAHAN BARU
 
 def chat_node(state: GraphState):
     """
     Node utama untuk memanggil LLM dan menghasilkan balasan.
-    Fungsi ini sekarang dirancang untuk bekerja dengan benar.
     """
-    character_id = state["character_id"]
     messages = state["messages"]
+    system_prompt = state["system_prompt"] # <-- Gunakan prompt dari state
 
-    character = WAIFU[character_id]
-    if not character:
-        raise ValueError(f"Tidak ada karakter dengan ID: {character_id}")
-    
+    # Pisahkan riwayat chat dari input pengguna terbaru
     current_user_input = messages[-1].content
     chat_history = messages[:-1]
 
+    # Buat prompt template yang dinamis
     prompt_template = ChatPromptTemplate.from_messages([
-        ("system", character["system_prompt"]),
+        ("system", system_prompt), # <-- Langsung gunakan prompt yang sudah diformat
         MessagesPlaceholder(variable_name="chat_history"),
         ("human", "{input}"),
     ])
 
+    # Buat rantai (chain) untuk node ini
     chain = prompt_template | llm
 
-    # invoke
+    # Panggil chain dengan konteks yang sesuai
     response = chain.invoke({
         "chat_history": chat_history,
         "input": current_user_input,
     })
 
+    # Tambahkan respons AI ke dalam daftar pesan
     new_messages = messages + [AIMessage(content=response.content)]
 
+    # Kembalikan state yang telah diperbarui
     return {
-        "character_id": character_id,
+        "character_id": state["character_id"],
         "messages": new_messages,
+        "system_prompt": system_prompt, # Teruskan state
     }
 
-# alur node workflow
+# Definisikan alur kerja (workflow) graph
 workflow = StateGraph(GraphState)
 workflow.add_node("chat", chat_node)
 workflow.set_entry_point("chat")
 workflow.add_edge("chat", END)
 
-# compile graph
+# Kompilasi graph menjadi objek yang bisa dipanggil
 chat_agent = workflow.compile()
 

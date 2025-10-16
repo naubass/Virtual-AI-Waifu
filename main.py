@@ -4,31 +4,33 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import List, Literal
 
-# Impor dari file-file konfigurasi baru kita
-from app.db import create_db_and_tables, get_async_session
-from app.models import User, Interaction, InteractionCreate, UserCreate, UserUpdate, UserRead
-from app.users import auth_backend, current_active_user, fastapi_users
+from sqlmodel import select
+from sqlalchemy.ext.asyncio.session import AsyncSession
 
-# Impor agen dan definisi karakter
-from app.recomender import get_recommendations 
-from app.agent import chat_agent
+# Impor dari file-file konfigurasi
+from app.db import create_db_and_tables, get_async_session
+from app.models import User, UserCreate, UserRead, UserUpdate, ChatMessage
+from app.users import auth_backend, current_active_user, fastapi_users
+from app.recomender import hybrid_recommendation
 from app.waifu import WAIFU
+# Impor LangGraph agent Anda
+from app.agent import chat_agent 
 from langchain_core.messages import HumanMessage, AIMessage
 
 from fastapi.middleware.cors import CORSMiddleware
 
-# setup app
-app = FastAPI()
+# Setup App
+app = FastAPI(title="WaifuChat AI")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# setup message
+# Model Pydantic untuk Request Body
 class Message(BaseModel):
     role: Literal["human", "ai"]
     content: str
@@ -37,87 +39,96 @@ class ChatRequest(BaseModel):
     character_id: str
     messages: List[Message] = Field(
         default_factory=list,
-        description="Seluruh riwayat percakapan, termasuk pesan terbaru dari pengguna."
+        description="Hanya berisi pesan baru dari pengguna di sesi ini."
     )
 
-# Fungsi helper untuk mengubah model Pydantic ke model LangChain
-def to_langchain_message(messages: List[Message]): 
-    lc_messages = []
-    for msg in messages:
-        if msg.role == "human":
-            lc_messages.append(HumanMessage(content=msg.content))
-        elif msg.role == "ai":
-            lc_messages.append(AIMessage(content=msg.content))
-    return lc_messages
+def to_langchain_message(messages: List[Message]) -> List[HumanMessage | AIMessage]:
+    return [
+        HumanMessage(content=msg.content) if msg.role == "human" 
+        else AIMessage(content=msg.content) 
+        for msg in messages
+    ]
 
-# Routes Autentikasi
-app.include_router(
-    fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"]
-)
-app.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate), prefix="/auth", tags=["auth"]
-)
-app.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate), prefix="/users", tags=["users"]
-)
+# Routes Autentikasi... (Tidak ada perubahan)
+app.include_router(fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"])
+app.include_router(fastapi_users.get_register_router(UserRead, UserCreate), prefix="/auth", tags=["auth"])
+app.include_router(fastapi_users.get_users_router(UserRead, UserUpdate), prefix="/users", tags=["users"])
     
-# setup routes
-@app.get("/api/waifu")
+# Routes API
+@app.get("/api/waifu", summary="Dapatkan semua karakter")
 async def get_waifus(user: User = Depends(current_active_user)):
     return list(WAIFU.values())
 
-@app.post("/api/chat")
-async def stream_chat(request: ChatRequest, user: User = Depends(current_active_user)):
+@app.post("/api/chat", summary="Kirim pesan ke karakter")
+async def chat_with_character(
+    request: ChatRequest, 
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session)
+):
     """
-    Endpoint utama untuk chat. Dilindungi dan hanya bisa diakses oleh user yang login.
+    Endpoint utama untuk chat, terintegrasi dengan LangGraph Agent.
     """
-    langchain_messages = to_langchain_message(request.messages)
+    # 1. Ambil Riwayat Chat dari Database (Memori)
+    stmt = select(ChatMessage).where(
+        ChatMessage.user_id == user.id,
+        ChatMessage.character_id == request.character_id
+    ).order_by(ChatMessage.timestamp.desc()).limit(20)
+    
+    result = await session.exec(stmt)
+    db_history = result.all()
+    db_history.reverse()
+    memory_messages = to_langchain_message([Message(role=msg.role, content=msg.content) for msg in db_history])
 
-    initial_state = {
+    # 2. Ambil pesan terbaru dari frontend
+    latest_user_message_obj = to_langchain_message(request.messages)[-1]
+
+    # 3. Gabungkan memori dan pesan baru untuk dikirim ke agent
+    combined_messages = memory_messages + [latest_user_message_obj]
+
+    # 4. Siapkan System Prompt yang Dinamis
+    character = WAIFU.get(request.character_id)
+    if not character:
+        return {"role": "ai", "content": "Maaf, karakter tidak ditemukan."}
+
+    # Format system_prompt dengan nama pengguna yang sedang login
+    formatted_system_prompt = character["system_prompt"].format(user_name=user.nama)
+
+    # 5. Panggil LangGraph Agent dengan state yang lengkap
+    final_state = chat_agent.invoke({
         "character_id": request.character_id,
-        "messages": langchain_messages,
-    }
+        "messages": combined_messages,
+        "system_prompt": formatted_system_prompt # <-- Kirim prompt yang sudah diformat
+    })
 
-    # Panggil agent LangChain Anda
-    final_state = chat_agent.invoke(initial_state)
+    # Ekstrak respons AI dari state akhir
     ai_response_content = final_state["messages"][-1].content
+    
+    # 6. Simpan percakapan baru (input & output) ke Database
+    user_msg_to_save = ChatMessage(user_id=user.id, character_id=request.character_id, role="human", content=latest_user_message_obj.content)
+    ai_msg_to_save = ChatMessage(user_id=user.id, character_id=request.character_id, role="ai", content=ai_response_content)
+    session.add(user_msg_to_save)
+    session.add(ai_msg_to_save)
+    await session.commit()
 
     return {"role": "ai", "content": ai_response_content}
 
-@app.post("/api/interactions", response_model=Interaction)
-async def log_interaction(
-    interaction: InteractionCreate,
-    user: User = Depends(current_active_user),
-    session = Depends(get_async_session)
-):
-    """Mencatat data interaksi user dengan karakter ke database."""
-    # Membuat objek Interaction dari data request dan menambahkan user_id dari user yang login
-    db_interaction = Interaction.from_orm(interaction, update={"user_id": user.id})
-    session.add(db_interaction)
-    await session.commit()
-    await session.refresh(db_interaction)
-    return db_interaction
-
-@app.get("/api/recommendations", response_model=List[str])
+@app.get("/api/recommendations", response_model=List[str], summary="Dapatkan rekomendasi karakter")
 async def get_character_recommendations(user: User = Depends(current_active_user)):
-    """Memberikan rekomendasi karakter berdasarkan riwayat interaksi user."""
-    # PERUBAHAN: Memanggil fungsi rekomendasi yang sudah benar
-    return await get_recommendations(user_id=user.id)
+    return await hybrid_recommendation(user_id=user.id)
 
+# Sajikan Frontend... (Tidak ada perubahan)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 @app.get("/", include_in_schema=False)
 async def read_root():
-    """Menyajikan halaman utama web."""
     return FileResponse("static/index.html")
 
 @app.on_event("startup")
 async def on_startup():
-    """Fungsi ini dijalankan sekali saat server pertama kali hidup."""
-    # Membuat tabel di database (jika belum ada) secara otomatis.
     await create_db_and_tables()
 
 # run app
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+

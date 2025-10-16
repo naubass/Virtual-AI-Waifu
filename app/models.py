@@ -2,6 +2,8 @@ from typing import Optional
 from sqlmodel import Field, SQLModel
 from fastapi_users_db_sqlmodel import SQLModelBaseUserDB
 from fastapi_users.schemas import BaseUser, BaseUserCreate, BaseUserUpdate
+from datetime import datetime
+from sqlalchemy import Column, TEXT # <-- 1. Tambahkan impor ini
 
 
 # === MODEL DATABASE ===
@@ -33,7 +35,7 @@ class UserUpdate(BaseUserUpdate):
     nim: Optional[str] = None
 
 
-# === MODEL UNTUK INTERAKSI ===
+# === MODEL UNTUK INTERAKSI (Bisa dihapus jika tidak digunakan lagi) ===
 class Interaction(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
@@ -46,3 +48,15 @@ class InteractionCreate(SQLModel):
     character_id: str
     message_count: int
     timestamp: str
+
+
+# === MODEL UNTUK MEMORI CHAT ===
+class ChatMessage(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id")
+    character_id: str
+    role: str  # "human" atau "ai"
+    # --- 2. PERBAIKAN DI SINI ---
+    content: str = Field(sa_column=Column(TEXT))
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+

@@ -36,10 +36,9 @@
             background-clip: text;
             color: transparent;
         }
-        /* Styling untuk hero section image fader */
         #hero-image-container {
             position: relative;
-            width: 320px; /* Lebar tetap untuk konsistensi */
+            width: 320px;
             height: 320px;
         }
         #hero-image-container img {
@@ -82,11 +81,9 @@
     
     <main id="main-content" class="hidden pt-16">
         
-        <!-- HERO SECTION BARU DENGAN HIASAN GELOMBANG -->
         <section id="hero-section" class="bg-pink-100/50 relative">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 relative z-10">
                 <div class="grid md:grid-cols-2 gap-12 items-center">
-                    <!-- Kolom Kiri: Teks -->
                     <div class="text-center md:text-left">
                         <h1 class="text-5xl md:text-6xl font-extrabold text-gray-800 leading-tight">
                             Temukan Sahabat <span class="brand-gradient">AI</span> <br class="hidden md:block"> Impianmu
@@ -103,15 +100,12 @@
                             </a>
                         </div>
                     </div>
-                    <!-- Kolom Kanan: Gambar Dinamis -->
                     <div class="flex justify-center items-center">
                         <div id="hero-image-container">
-                            <!-- Gambar akan dimasukkan oleh JavaScript -->
-                        </div>
+                            </div>
                     </div>
                 </div>
             </div>
-            <!-- Hiasan Gelombang SVG -->
             <div class="absolute bottom-0 left-0 w-full leading-none z-0" style="transform: translateY(1px);">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="#faf5ff" fill-opacity="1" d="M0,192L48,176C96,160,192,128,288,133.3C384,139,480,181,576,208C672,235,768,245,864,218.7C960,192,1056,128,1152,117.3C1248,107,1344,149,1392,170.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>
             </div>
@@ -123,7 +117,7 @@
                      <h2 class="text-4xl font-bold mb-4">
                          <i class="fas fa-star text-yellow-400 mr-2"></i> Rekomendasi Untukmu
                      </h2>
-                     <p class="text-lg text-gray-600">Berdasarkan interaksimu, kami pikir kamu akan suka karakter ini!</p>
+                     <p class="text-lg text-gray-600">Berdasarkan percakapanmu, kami pikir kamu akan suka karakter ini!</p>
                  </div>
                  <div id="recommendation-grid" class="flex flex-wrap justify-center gap-8">
                  </div>
@@ -144,24 +138,17 @@
         </section>
     </main>
     
-    <!-- AUTH MODAL REDESIGNED WITH IMAGE -->
     <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm">
         <div class="bg-white w-full max-w-4xl grid md:grid-cols-2 rounded-2xl shadow-xl overflow-hidden transition-all transform scale-100">
-            
-            <!-- Kolom Kiri: Gambar (Disembunyikan di layar kecil) -->
             <div class="hidden md:block relative">
                 <img src="photo/waifu4.jpg" alt="WaifuChat AI Illustration" class="h-full w-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-purple-800/30 to-transparent"></div>
             </div>
-
-            <!-- Kolom Kanan: Form -->
             <div class="p-8 flex flex-col justify-center">
-                <!-- Login Form -->
                 <form id="login-form">
                     <h2 class="text-3xl font-bold text-center mb-2">Selamat Datang!</h2>
                     <p class="text-center text-gray-500 mb-6">Login untuk melanjutkan ke <span class="brand-gradient font-bold">WaifuChat AI</span></p>
                     <div id="login-error" class="text-red-500 text-sm mb-4 text-center hidden h-5"></div>
-                    
                     <div class="space-y-4">
                         <div>
                             <label for="login-email" class="block mb-1 text-sm font-medium text-gray-600">Email</label>
@@ -171,53 +158,28 @@
                             <label for="login-password" class="block mb-1 text-sm font-medium text-gray-600">Password</label>
                             <div class="relative">
                                 <input type="password" id="login-password" placeholder="••••••••" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 transition" required>
-                                <button type="button" onclick="togglePasswordVisibility('login-password')" class="absolute inset-y-0 right-0 px-4 text-gray-500 hover:text-pink-500">
-                                    <i class="fas fa-eye"></i>
-                                </button>
+                                <button type="button" onclick="togglePasswordVisibility('login-password')" class="absolute inset-y-0 right-0 px-4 text-gray-500 hover:text-pink-500"><i class="fas fa-eye"></i></button>
                             </div>
                         </div>
                         <button type="submit" class="w-full text-white font-bold py-3 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 transition transform hover:scale-105 shadow-lg">Login</button>
                     </div>
-                    
-                    <p class="text-center text-sm mt-6">
-                        Belum punya akun? <a href="#" id="show-register" class="font-bold text-pink-500 hover:underline">Daftar di sini</a>
-                    </p>
+                    <p class="text-center text-sm mt-6">Belum punya akun? <a href="#" id="show-register" class="font-bold text-pink-500 hover:underline">Daftar di sini</a></p>
                 </form>
-
-                <!-- Register Form -->
                 <form id="register-form" class="hidden">
                     <h2 class="text-3xl font-bold text-center mb-2">Buat Akun</h2>
                     <p class="text-center text-gray-500 mb-6">Bergabunglah dengan <span class="brand-gradient font-bold">WaifuChat AI</span></p>
                      <div id="register-error" class="text-red-500 text-sm mb-4 text-center hidden h-5"></div>
-                     
                      <div class="space-y-4">
-                        <div>
-                            <label for="register-nama" class="block mb-1 text-sm font-medium text-gray-600">Nama Lengkap</label>
-                            <input type="text" id="register-nama" placeholder="Nama Kamu" class="w-full p-3 border border-gray-300 rounded-lg" required>
-                        </div>
-                        <div>
-                            <label for="register-nim" class="block mb-1 text-sm font-medium text-gray-600">NIM</label>
-                            <input type="text" id="register-nim" placeholder="Nomor Induk Mahasiswa" class="w-full p-3 border border-gray-300 rounded-lg" required>
-                        </div>
-                        <div>
-                            <label for="register-email" class="block mb-1 text-sm font-medium text-gray-600">Email</label>
-                            <input type="email" id="register-email" placeholder="Email aktif" class="w-full p-3 border border-gray-300 rounded-lg" required>
-                        </div>
+                        <div><label for="register-nama" class="block mb-1 text-sm font-medium text-gray-600">Nama Lengkap</label><input type="text" id="register-nama" placeholder="Nama Kamu" class="w-full p-3 border border-gray-300 rounded-lg" required></div>
+                        <div><label for="register-nim" class="block mb-1 text-sm font-medium text-gray-600">NIM</label><input type="text" id="register-nim" placeholder="Nomor Induk Mahasiswa" class="w-full p-3 border border-gray-300 rounded-lg" required></div>
+                        <div><label for="register-email" class="block mb-1 text-sm font-medium text-gray-600">Email</label><input type="email" id="register-email" placeholder="Email aktif" class="w-full p-3 border border-gray-300 rounded-lg" required></div>
                         <div>
                             <label for="register-password" class="block mb-1 text-sm font-medium text-gray-600">Password</label>
-                            <div class="relative">
-                                <input type="password" id="register-password" placeholder="Buat password yang kuat" class="w-full p-3 border border-gray-300 rounded-lg" required>
-                                <button type="button" onclick="togglePasswordVisibility('register-password')" class="absolute inset-y-0 right-0 px-4 text-gray-500 hover:text-pink-500">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
+                            <div class="relative"><input type="password" id="register-password" placeholder="Buat password yang kuat" class="w-full p-3 border border-gray-300 rounded-lg" required><button type="button" onclick="togglePasswordVisibility('register-password')" class="absolute inset-y-0 right-0 px-4 text-gray-500 hover:text-pink-500"><i class="fas fa-eye"></i></button></div>
                         </div>
                         <button type="submit" class="w-full text-white font-bold py-3 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 transition transform hover:scale-105 shadow-lg">Register</button>
                     </div>
-
-                    <p class="text-center text-sm mt-6">
-                        Sudah punya akun? <a href="#" id="show-login" class="font-bold text-purple-500 hover:underline">Login di sini</a>
-                    </p>
+                    <p class="text-center text-sm mt-6">Sudah punya akun? <a href="#" id="show-login" class="font-bold text-purple-500 hover:underline">Login di sini</a></p>
                 </form>
             </div>
         </div>
@@ -226,29 +188,18 @@
     <section id="chat-interface" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm invisible opacity-0 transition-opacity duration-300">
         <div id="chat-window" class="w-full max-w-2xl h-[90vh] max-h-[700px] bg-pink-50 rounded-2xl shadow-xl flex flex-col transform scale-95 transition-transform duration-300">
             <header class="bg-white shadow-md p-4 flex items-center justify-between flex-shrink-0 rounded-t-2xl">
-                <div class="flex items-center">
-                    <img id="chat-character-img" src="" alt="Character" class="w-12 h-12 rounded-full object-cover mr-4 border-2 border-pink-200">
-                    <h3 id="chat-character-name" class="text-xl font-bold"></h3>
-                </div>
-                <button id="close-chat-btn" class="text-gray-500 hover:text-pink-500 transition-colors p-2 rounded-full hover:bg-pink-100">
-                     <i class="fas fa-times fa-lg"></i>
-                </button>
+                <div class="flex items-center"><img id="chat-character-img" src="" alt="Character" class="w-12 h-12 rounded-full object-cover mr-4 border-2 border-pink-200"><h3 id="chat-character-name" class="text-xl font-bold"></h3></div>
+                <button id="close-chat-btn" class="text-gray-500 hover:text-pink-500 transition-colors p-2 rounded-full hover:bg-pink-100"><i class="fas fa-times fa-lg"></i></button>
             </header>
             <div id="chat-log" class="flex-grow p-6 overflow-y-auto space-y-6 bg-pink-100/30"></div>
             <footer class="bg-white p-4 border-t rounded-b-2xl">
-                <form id="chat-form" class="flex items-center space-x-4">
-                    <input id="message-input" type="text" placeholder="Type your message..." class="w-full p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-400 transition" autocomplete="off">
-                    <button type="submit" class="bg-pink-500 text-white rounded-full w-12 h-12 flex-shrink-0 flex items-center justify-center hover:bg-pink-600 transition-colors transform hover:scale-110">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </form>
+                <form id="chat-form" class="flex items-center space-x-4"><input id="message-input" type="text" placeholder="Ketik pesan Anda..." class="w-full p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-400 transition" autocomplete="off"><button type="submit" class="bg-pink-500 text-white rounded-full w-12 h-12 flex-shrink-0 flex items-center justify-center hover:bg-pink-600 transition-colors transform hover:scale-110"><i class="fas fa-paper-plane"></i></button></form>
             </footer>
         </div>
     </section>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- ELEMENT SELECTORS ---
         const mainContent = document.getElementById('main-content');
         const authModal = document.getElementById('auth-modal');
         const loginForm = document.getElementById('login-form');
@@ -269,53 +220,44 @@
         const chatLog = document.getElementById('chat-log');
         const chatForm = document.getElementById('chat-form');
         const messageInput = document.getElementById('message-input');
-
-
-        // --- APP STATE ---
+        
         let conversations = {};
         let currentCharacter = null;
         let allWaifusData = [];
 
-        // --- HERO IMAGE FADER ---
         function startHeroImageFader(waifus) {
             if (!heroImageContainer || !waifus || waifus.length === 0) return;
-
-            // Ambil 5 gambar acak atau semua jika kurang dari 5
             const images = waifus.sort(() => 0.5 - Math.random()).slice(0, 5).map(w => w.image);
-            
             if (images.length === 0) return;
-
-            heroImageContainer.innerHTML = ''; // Clear previous images
+            heroImageContainer.innerHTML = '';
             images.forEach((src, index) => {
                 const img = document.createElement('img');
                 img.src = src;
-                if (index === 0) {
-                    img.classList.add('active');
-                }
+                if (index === 0) img.classList.add('active');
                 heroImageContainer.appendChild(img);
             });
-
             let currentIndex = 0;
             setInterval(() => {
                 const allImages = heroImageContainer.querySelectorAll('img');
-                if (allImages.length > 1) {
-                    allImages[currentIndex].classList.remove('active');
-                    currentIndex = (currentIndex + 1) % allImages.length;
-                    allImages[currentIndex].classList.add('active');
-                }
-            }, 4000); // Ganti gambar setiap 4 detik
+                if (allImages.length <= 1) return;
+                allImages[currentIndex].classList.remove('active');
+                currentIndex = (currentIndex + 1) % allImages.length;
+                allImages[currentIndex].classList.add('active');
+            }, 4000);
         }
 
-        // --- AUTH & INITIALIZATION ---
         async function initializeApp() {
             const token = localStorage.getItem('access_token');
             if (token) {
-                const user = await fetchWithAuth('/users/me');
-                if (user) {
-                    showMainContent(user);
-                } else {
-                    localStorage.removeItem('access_token');
-                    showAuthModal();
+                try {
+                    const user = await fetchWithAuth('/users/me');
+                    if (user && user.id) {
+                        showMainContent(user);
+                    } else {
+                        handleLogout();
+                    }
+                } catch (error) {
+                     handleLogout();
                 }
             } else {
                 showAuthModal();
@@ -325,6 +267,7 @@
         function showAuthModal() {
             authModal.style.display = 'flex';
             mainContent.classList.add('hidden');
+            userInfoDiv.classList.add('hidden');
         }
 
         function showMainContent(user) {
@@ -345,7 +288,6 @@
                 email: document.getElementById('register-email').value,
                 password: document.getElementById('register-password').value,
             };
-
             try {
                 const response = await fetch('/auth/register', {
                     method: 'POST',
@@ -374,7 +316,6 @@
             const formData = new URLSearchParams();
             formData.append('username', document.getElementById('login-email').value);
             formData.append('password', document.getElementById('login-password').value);
-            
             try {
                 const response = await fetch('/auth/jwt/login', {
                     method: 'POST',
@@ -386,7 +327,7 @@
                 }
                 const data = await response.json();
                 localStorage.setItem('access_token', data.access_token);
-                initializeApp();
+                initializeApp(); 
             } catch (error) {
                 loginErrorDiv.textContent = error.message;
                 loginErrorDiv.classList.remove('hidden');
@@ -395,8 +336,15 @@
         
         function handleLogout() {
             localStorage.removeItem('access_token');
-            window.location.reload();
+            conversations = {};
+            currentCharacter = null;
+            allWaifusData = [];
+            waifuGrid.innerHTML = '';
+            recommendationGrid.innerHTML = '';
+            userEmailSpan.textContent = '';
+            showAuthModal();
         }
+
 
         window.togglePasswordVisibility = function(inputId) {
             const input = document.getElementById(inputId);
@@ -414,49 +362,49 @@
 
         async function fetchWithAuth(url, options = {}) {
             const token = localStorage.getItem('access_token');
-            if (!token) {
-                showAuthModal();
-                return null;
+            if (!token) { 
+                showAuthModal(); 
+                throw new Error("No auth token found."); 
             }
-
+            
             const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
-
-            try {
-                const response = await fetch(url, { ...options, headers });
-                if (response.status === 401) {
-                    handleLogout();
-                    return null;
-                }
-                if (!response.ok) {
-                    console.error('API request failed:', response.statusText);
-                    return null;
-                }
-                return await response.json();
-            } catch (error) {
-                console.error(`Error fetching ${url}:`, error);
-                return null;
+            
+            const response = await fetch(url, { ...options, headers });
+            
+            if (response.status === 401) { 
+                handleLogout(); 
+                throw new Error("Unauthorized."); 
             }
+            if (!response.ok) { 
+                console.error('API request failed:', response.statusText);
+                throw new Error(`API request failed with status: ${response.status}`);
+            }
+            return await response.json();
         }
         
         async function loadAllData() {
-            const [recs, waifus] = await Promise.all([
-                fetchWithAuth('/api/recommendations'),
-                fetchWithAuth('/api/waifu')
-            ]);
-            
-            if (!waifus) return; 
-            
-            allWaifusData = waifus; 
-            displayWaifus(waifus, waifuGrid);
-            
-            // Mulai fader setelah data waifu didapatkan
-            startHeroImageFader(waifus);
+            recommendationGrid.innerHTML = `<p class="text-gray-500 col-span-full">Memuat rekomendasi...</p>`;
+            waifuGrid.innerHTML = `<p class="text-gray-500 col-span-full">Memuat karakter...</p>`;
 
-            if (recs && recs.length > 0) {
-                const recommendedChars = waifus.filter(w => recs.includes(w.id));
-                displayWaifus(recommendedChars, recommendationGrid);
-            } else {
-                recommendationGrid.innerHTML = `<p class="text-gray-500 col-span-full">Belum ada rekomendasi. Mulai chat untuk mendapatkannya!</p>`;
+            try {
+                const [recs, waifus] = await Promise.all([
+                    fetchWithAuth('/api/recommendations'),
+                    fetchWithAuth('/api/waifu')
+                ]);
+
+                allWaifusData = waifus;
+                displayWaifus(waifus, waifuGrid);
+                startHeroImageFader(waifus);
+
+                if (recs && recs.length > 0) {
+                    const waifuMap = new Map(waifus.map(w => [w.id, w]));
+                    const recommendedChars = recs.map(id => waifuMap.get(id)).filter(Boolean); 
+                    displayWaifus(recommendedChars, recommendationGrid);
+                } else {
+                    recommendationGrid.innerHTML = `<p class="text-gray-500 col-span-full">Belum ada rekomendasi. Mulai chat untuk mendapatkannya!</p>`;
+                }
+            } catch (error) {
+                console.error("Gagal memuat data:", error.message);
             }
         }
         
@@ -464,27 +412,13 @@
             if(!gridElement) return;
             gridElement.innerHTML = '';
             if (!waifus || waifus.length === 0) {
-                 if (gridElement.id === 'recommendation-grid') {
-                    gridElement.innerHTML = `<p class="text-gray-500 col-span-full">Belum ada rekomendasi. Mulai chat untuk mendapatkannya!</p>`;
-                 }
+                 if (gridElement.id === 'recommendation-grid') gridElement.innerHTML = `<p class="text-gray-500 col-span-full">Belum ada rekomendasi. Mulai chat untuk mendapatkannya!</p>`;
                  return;
             }
-
             waifus.forEach(waifu => {
                 const card = document.createElement('div');
                 card.className = 'w-80 group bg-white rounded-2xl shadow-lg transform hover:-translate-y-2 transition-all duration-300 hover:shadow-2xl hover:shadow-pink-200/50 hover:ring-2 hover:ring-pink-400';
-                card.innerHTML = `
-                    <div class="overflow-hidden rounded-t-2xl h-64">
-                        <img src="${waifu.image}" alt="${waifu.name}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out">
-                    </div>
-                    <div class="p-6 flex flex-col items-center text-center">
-                        <h3 class="text-2xl font-bold mb-2 text-gray-800">${waifu.name}</h3>
-                        <p class="text-gray-600 text-sm mb-6 h-16 leading-relaxed">${waifu.description}</p>
-                        <button class="chat-btn w-full max-w-xs bg-pink-500 text-white font-bold py-3 px-4 rounded-full hover:bg-pink-600 transition-colors shadow-lg shadow-pink-500/30 hover:shadow-xl hover:shadow-pink-500/50">
-                            Chat Now
-                        </button>
-                    </div>
-                `;
+                card.innerHTML = `<div class="overflow-hidden rounded-t-2xl h-64"><img src="${waifu.image}" alt="${waifu.name}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out"></div><div class="p-6 flex flex-col items-center text-center"><h3 class="text-2xl font-bold mb-2 text-gray-800">${waifu.name}</h3><p class="text-gray-600 text-sm mb-6 h-16 leading-relaxed">${waifu.description}</p><button class="chat-btn w-full max-w-xs bg-pink-500 text-white font-bold py-3 px-4 rounded-full hover:bg-pink-600 transition-colors shadow-lg shadow-pink-500/30 hover:shadow-xl hover:shadow-pink-500/50">Chat Now</button></div>`;
                 card.querySelector('.chat-btn').addEventListener('click', () => startChat(waifu));
                 gridElement.appendChild(card);
             });
@@ -495,64 +429,35 @@
             chatHeaderImg.src = character.image;
             chatHeaderName.textContent = character.name;
             chatLog.innerHTML = '';
-
             if (!conversations[character.id]) {
-                const welcomeMessage = `Hello! I'm ${character.name}. What would you like to talk about?`;
-                conversations[character.id] = [{ role: 'ai', content: welcomeMessage }];
+                conversations[character.id] = [{ role: 'ai', content: `Halo! Aku ${character.name}. Ada yang ingin kamu bicarakan?` }];
             }
-
             conversations[character.id].forEach(message => addMessageToLog(message.role, message.content));
-            
             document.body.style.overflow = 'hidden';
             chatInterface.classList.remove('invisible', 'opacity-0');
             chatWindow.classList.remove('scale-95');
             messageInput.focus();
         }
         
+        // --- PERUBAHAN DI SINI ---
         async function closeModal() {
             if (!currentCharacter) return;
-            const userMessagesCount = (conversations[currentCharacter.id] || []).filter(m => m.role === 'human').length;
-            if (userMessagesCount > 0) {
-                await logInteraction(currentCharacter.id, userMessagesCount);
-            }
-            
             chatInterface.classList.add('opacity-0');
             chatWindow.classList.add('scale-95');
             setTimeout(() => {
                 chatInterface.classList.add('invisible');
                 currentCharacter = null;
                 document.body.style.overflow = '';
+                // Muat ulang rekomendasi setelah chat selesai untuk data yang lebih segar
+                loadAllData();
             }, 300);
-        }
-        
-        async function logInteraction(characterId, messageCount) {
-            const interactionData = {
-                character_id: characterId,
-                message_count: messageCount,
-                timestamp: new Date().toISOString()
-            };
-            await fetchWithAuth('/api/interactions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(interactionData)
-            });
-            console.log(`Interaction with ${characterId} (${messageCount} messages) logged.`);
-            const recs = await fetchWithAuth('/api/recommendations');
-             if (recs && recs.length > 0) {
-                const recommendedChars = allWaifusData.filter(w => recs.includes(w.id));
-                displayWaifus(recommendedChars, recommendationGrid);
-            }
         }
 
         function addMessageToLog(role, content) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `flex ${role === 'human' ? 'justify-end' : 'justify-start'}`;
             const contentDiv = document.createElement('div');
-            contentDiv.className = `max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${
-                role === 'human'
-                    ? 'bg-pink-500 text-white rounded-br-none'
-                    : 'bg-white text-gray-800 rounded-bl-none shadow-md'
-            }`;
+            contentDiv.className = `max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${role === 'human' ? 'bg-pink-500 text-white rounded-br-none' : 'bg-white text-gray-800 rounded-bl-none shadow-md'}`;
             contentDiv.textContent = content;
             messageDiv.appendChild(contentDiv);
             chatLog.appendChild(messageDiv);
@@ -563,11 +468,14 @@
             e.preventDefault();
             const userInput = messageInput.value.trim();
             if (!userInput || !currentCharacter) return;
-
-            messageInput.value = '';
+            
             addMessageToLog('human', userInput);
+            if (!conversations[currentCharacter.id]) {
+                conversations[currentCharacter.id] = [];
+            }
             conversations[currentCharacter.id].push({ role: 'human', content: userInput });
-
+            
+            messageInput.value = '';
             const typingIndicator = createTypingIndicator();
             chatLog.appendChild(typingIndicator);
             chatLog.scrollTop = chatLog.scrollHeight;
@@ -578,15 +486,13 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         character_id: currentCharacter.id,
-                        messages: conversations[currentCharacter.id]
+                        messages: [{ role: 'human', content: userInput }] 
                     })
                 });
-                if (response) {
-                    addMessageToLog('ai', response.content);
-                    conversations[currentCharacter.id].push({ role: 'ai', content: response.content });
-                } else {
-                    addMessageToLog('ai', 'Maaf, terjadi kesalahan.');
-                }
+                
+                addMessageToLog('ai', response.content);
+                conversations[currentCharacter.id].push({ role: 'ai', content: response.content });
+                
             } catch (error) {
                 console.error('Error sending message:', error);
                 addMessageToLog('ai', 'Sepertinya ada masalah koneksi. Coba lagi nanti.');
@@ -609,7 +515,6 @@
             return messageDiv;
         }
 
-        // --- EVENT LISTENERS ---
         loginForm.addEventListener('submit', handleLogin);
         registerForm.addEventListener('submit', handleRegister);
         logoutBtn.addEventListener('click', handleLogout);
@@ -619,7 +524,6 @@
         chatInterface.addEventListener('click', (e) => { if (e.target === chatInterface) closeModal(); });
         chatForm.addEventListener('submit', handleSendMessage);
         
-        // --- RUN APP ---
         initializeApp();
     });
     </script>

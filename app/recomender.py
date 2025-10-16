@@ -1,127 +1,138 @@
 import pandas as pd
-import random
+import numpy as np
 from sqlmodel import select
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sqlalchemy import desc
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.preprocessing import MinMaxScaler
+from sentence_transformers import SentenceTransformer
+import logging
 
 # Impor dari aplikasi kita
-from app.db import get_async_session
-from app.models import Interaction
+from app.db import AsyncSessionLocal
+from app.models import ChatMessage
 from app.waifu import WAIFU
 
-async def get_interaction_data() -> pd.DataFrame:
-    """
-    Mengambil semua data interaksi dari database dan mengubahnya menjadi DataFrame.
-    """
-    async for session in get_async_session():
-        stmt = select(Interaction)
-        result = await session.exec(stmt)
-        interactions = result.all()
+# Konfigurasi logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-        if not interactions:
-            return pd.DataFrame(columns=["user_id", "character_id", "message_count"])
+# Muat model embedding sekali saja
+try:
+    logger.info("Memuat model Sentence Transformer...")
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    logger.info("Model berhasil dimuat.")
+except Exception as e:
+    logger.error(f"Gagal memuat model: {e}")
+    model = None
 
-        df = pd.DataFrame(
-            [
-                {
-                    "user_id": i.user_id,
-                    "character_id": i.character_id,
-                    "message_count": i.message_count,
-                }
-                for i in interactions
-            ]
-        )
-        return df
-
-def content_based_filtering(user_history: pd.DataFrame, all_waifus: dict) -> dict:
+async def calculate_content_scores(user_id: int, character_vectors: dict) -> dict[str, float]:
     """
-    Memberikan skor berdasarkan kemiripan deskripsi karakter (Content-Based).
+    STRATEGI FINAL: Menghitung skor afinitas HANYA berdasarkan 20 pesan TERAKHIR.
+    Ini memberikan "Recency Boost", membuat sistem sangat responsif.
     """
-    if user_history.empty:
-        return {}
-    # ... (Logika ini sudah benar dan tidak diubah)
-    interacted_char_ids = user_history["character_id"].unique()
-    user_profile_texts = [all_waifus[cid]['description'] for cid in interacted_char_ids if cid in all_waifus]
-    if not user_profile_texts: return {}
-    user_profile_doc = " ".join(user_profile_texts)
-    waifu_items = list(all_waifus.values())
-    waifu_ids = [w['id'] for w in waifu_items]
-    waifu_descriptions = [w['description'] for w in waifu_items]
-    documents = [user_profile_doc] + waifu_descriptions
-    vectorizer = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = vectorizer.fit_transform(documents)
-    cosine_sim = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:])
-    return {waifu_ids[i]: score for i, score in enumerate(cosine_sim[0])}
-
-def collaborative_filtering(user_id: int, all_interactions: pd.DataFrame) -> dict:
-    """
-    [LOGIKA BARU]
-    Memberikan skor berdasarkan kemiripan dengan pengguna lain (Collaborative Filtering).
-    """
-    if all_interactions.empty or user_id not in all_interactions['user_id'].values:
-        return {}
-
-    # 1. Buat matriks user-item: baris=user, kolom=karakter, nilai=jumlah pesan
-    user_item_matrix = all_interactions.pivot_table(
-        index='user_id', columns='character_id', values='message_count'
-    ).fillna(0)
-    
-    # 2. Hitung kemiripan antar pengguna menggunakan cosine similarity
-    user_similarity = cosine_similarity(user_item_matrix)
-    user_similarity_df = pd.DataFrame(user_similarity, index=user_item_matrix.index, columns=user_item_matrix.index)
-    
-    # 3. Ambil pengguna yang mirip dengan pengguna target (kecuali dirinya sendiri)
-    similar_users = user_similarity_df[user_id].sort_values(ascending=False)[1:]
-    if similar_users.empty:
-        return {}
+    content_scores = {}
+    async with AsyncSessionLocal() as session:
+        await session.connection(execution_options={"isolation_level": "READ COMMITTED"})
         
-    # 4. Hitung skor rekomendasi berdasarkan interaksi pengguna mirip
-    weighted_interactions = user_item_matrix.loc[similar_users.index].multiply(similar_users.values, axis=0)
-    recommendation_scores = weighted_interactions.sum(axis=0)
+        for char_id, char_vector in character_vectors.items():
+            # --- PERUBAHAN KUNCI DI SINI ---
+            # 1. Ambil HANYA 20 pesan TERBARU user dengan karakter ini.
+            stmt = select(ChatMessage).where(
+                ChatMessage.user_id == user_id,
+                ChatMessage.character_id == char_id
+            ).order_by(desc(ChatMessage.timestamp)).limit(20) # Urutkan dari terbaru, ambil 20
+            
+            result = await session.exec(stmt)
+            messages = result.all()
+            
+            if not messages:
+                content_scores[char_id] = 0.0
+                continue
+            
+            # 2. Gabungkan percakapan TERBARU yang relevan.
+            conversation_text = " ".join([msg.content for msg in messages])
+            
+            # 3. Buat vektor dari percakapan spesifik ini.
+            conversation_vector = model.encode(conversation_text)
+            
+            # 4. Hitung kemiripan antara persona karakter dan interaksi TERBARU user.
+            similarity = cosine_similarity(
+                conversation_vector.reshape(1, -1),
+                char_vector.reshape(1, -1)
+            )
+            content_scores[char_id] = float(similarity[0][0])
+            
+    logger.info(f"--- SKOR KONTEN (Recency Boost) --- \n{content_scores}\n")
+    return content_scores
 
-    # 5. Normalisasi skor ke rentang 0-1 agar bisa digabung
-    scaler = MinMaxScaler()
-    normalized_scores = scaler.fit_transform(recommendation_scores.values.reshape(-1, 1))
+async def get_all_user_vectors_for_collab() -> dict[int, np.ndarray]:
+    """Fungsi bantuan untuk collaborative filtering (tidak berubah)."""
+    user_conversations = {}
+    async with AsyncSessionLocal() as session:
+        await session.connection(execution_options={"isolation_level": "READ COMMITTED"})
+        stmt = select(ChatMessage)
+        messages = (await session.exec(stmt)).all()
+        for msg in messages:
+            user_conversations.setdefault(msg.user_id, "")
+            user_conversations[msg.user_id] += f"{msg.content} "
     
-    return {char_id: score[0] for char_id, score in zip(recommendation_scores.index, normalized_scores)}
+    return {uid: model.encode(text) for uid, text in user_conversations.items()}
 
-async def get_recommendations(user_id: int, alpha: float = 0.5) -> list[str]:
-    """
-    [FUNGSI UTAMA HYBRID]
-    Menggabungkan hasil content-based dan collaborative filtering.
-    """
-    all_interactions = await get_interaction_data()
-    user_history = all_interactions[all_interactions["user_id"] == user_id]
+def collaborative_scores(target_user_id: int, user_vectors: dict, all_interactions_df: pd.DataFrame) -> dict:
+    """Fungsi ini tidak berubah."""
+    if target_user_id not in user_vectors or len(user_vectors) < 2:
+        return {}
+    target_vector = user_vectors[target_user_id]
+    similarities = {
+        uid: cosine_similarity(target_vector.reshape(1, -1), vec.reshape(1, -1))[0][0]
+        for uid, vec in user_vectors.items() if uid != target_user_id
+    }
+    if not similarities:
+        return {}
+    similar_users = sorted(similarities.items(), key=lambda item: item[1], reverse=True)[:5]
+    recommended_chars = {}
+    for user_id, score in similar_users:
+        liked_chars = all_interactions_df[all_interactions_df['user_id'] == user_id]['character_id'].tolist()
+        for char in liked_chars:
+            recommended_chars.setdefault(char, 0.0)
+            recommended_chars[char] += float(score)
+    return recommended_chars
 
-    if user_history.empty:
-        all_char_ids = list(WAIFU.keys())
-        return random.sample(all_char_ids, min(len(all_char_ids), 3))
+async def hybrid_recommendation(user_id: int, alpha: float = 0.7) -> list[str]:
+    if model is None:
+        return []
 
-    # Dapatkan skor dari kedua metode
-    content_scores = content_based_filtering(user_history, WAIFU)
-    collab_scores = collaborative_filtering(user_id, all_interactions)
+    logger.info(f"--- MEMULAI REKOMENDASI (STRATEGI FINAL DENGAN RECENCY BOOST) UNTUK USER: {user_id} ---")
 
-    # Gabungkan skor dengan bobot alpha
+    character_prompts = {char_id: data['system_prompt'] for char_id, data in WAIFU.items()}
+    character_vectors = {char_id: model.encode(prompt) for char_id, prompt in character_prompts.items()}
+
+    content_scores = await calculate_content_scores(user_id, character_vectors)
+
+    user_vectors_for_collab = await get_all_user_vectors_for_collab()
+    async with AsyncSessionLocal() as session:
+        await session.connection(execution_options={"isolation_level": "READ COMMITTED"})
+        stmt = select(ChatMessage.user_id, ChatMessage.character_id).distinct()
+        interactions = (await session.exec(stmt)).all()
+        all_interactions_df = pd.DataFrame(interactions, columns=['user_id', 'character_id'])
+    
+    collab_scores = collaborative_scores(user_id, user_vectors_for_collab, all_interactions_df)
+    max_collab_score = max(collab_scores.values()) if collab_scores else 1.0
+    collab_scores_normalized = {char: score / max_collab_score for char, score in collab_scores.items()}
+    logger.info(f"--- SKOR KOLABORATIF (Normalized) --- \n{collab_scores_normalized}\n")
+
     final_scores = {}
-    all_char_ids = set(content_scores.keys()) | set(collab_scores.keys())
-
+    all_char_ids = set(content_scores.keys()) | set(collab_scores_normalized.keys())
     for char_id in all_char_ids:
-        content_score = content_scores.get(char_id, 0.0)
-        collab_score = collab_scores.get(char_id, 0.0)
-        final_score = (alpha * content_score) + ((1 - alpha) * collab_score)
-        final_scores[char_id] = final_score
-    
-    # Sisa logika tetap sama: prioritaskan karakter baru, fallback jika semua sudah dicoba
-    all_sorted_recs = sorted(final_scores.items(), key=lambda item: item[1], reverse=True)
-    
-    interacted_chars = set(user_history["character_id"].unique())
-    new_recs_sorted = [(cid, s) for cid, s in all_sorted_recs if cid not in interacted_chars]
-    
-    if not new_recs_sorted:
-        print(f"User {user_id}: Tidak ada rekomendasi baru, menampilkan ulang yang paling cocok (hybrid).")
-        return [cid for cid, s in all_sorted_recs[:3]]
-    else:
-        print(f"User {user_id}: Menampilkan rekomendasi baru (hybrid).")
-        return [cid for cid, s in new_recs_sorted[:3]]
+        content = content_scores.get(char_id, 0.0)
+        collab = collab_scores_normalized.get(char_id, 0.0)
+        final_scores[char_id] = (alpha * content) + ((1 - alpha) * collab)
+    logger.info(f"--- SKOR FINAL GABUNGAN --- \n{final_scores}\n")
 
+    interacted_chars = set(all_interactions_df[all_interactions_df['user_id'] == user_id]['character_id'].unique())
+    scores_to_sort = final_scores
+
+    sorted_recommendations = sorted(scores_to_sort.items(), key=lambda item: item[1], reverse=True)
+    recommendation_ids = [char_id for char_id, score in sorted_recommendations[:3]]
+    logger.info(f"--- REKOMENDASI FINAL --- \n{recommendation_ids}\n")
+    
+    return recommendation_ids

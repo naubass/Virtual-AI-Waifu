@@ -1,7 +1,5 @@
-# app/users.py (VERSI FINAL YANG DIPERBAIKI)
-
 from typing import Optional
-from fastapi import Depends
+from fastapi import Depends, Request # <-- 1. Tambahkan impor 'Request'
 from fastapi_users import FastAPIUsers, BaseUserManager, IntegerIDMixin
 from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
 from fastapi_users.password import PasswordHelper
@@ -17,37 +15,22 @@ from app.models import User, UserCreate
 SECRET = "e1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2"
 
 
-# === LANGKAH 1: Buat Subclass Database Adapter yang Benar ===
+# === Database Adapter yang Benar ===
 class CustomSQLModelUserDatabase(SQLModelUserDatabase[User, int]):
-    """
-    Kelas ini mewarisi dari SQLModelUserDatabase dan secara eksplisit
-    mengimplementasikan ulang metode-metode database untuk memastikan 'await'
-    selalu digunakan dengan benar.
-    """
-    
-    # Perbaikan dari masalah sebelumnya (biarkan ini ada)
     async def get_by_email(self, email: str) -> Optional[User]:
         statement = select(self.user_model).where(self.user_model.email == email)
         results = await self.session.exec(statement)
         return results.first()
 
-    # PERBAIKAN BARU: Tambahkan metode ini
     async def get(self, id: int) -> Optional[User]:
-        """
-        Mengambil user berdasarkan ID (primary key).
-        Ini memperbaiki error 'coroutine object has no attribute is_active'
-        saat mengakses endpoint /users/me.
-        """
-        # Bagian penting: 'await' sebelum self.session.get
         return await self.session.get(self.user_model, id)
 
 
-# === LANGKAH 2: Perbarui Dependency Provider untuk Menggunakan Kelas Custom Kita ===
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
     yield CustomSQLModelUserDatabase(session, User)
 
 
-# === User Manager (Gunakan UserManager yang sudah diperbaiki dari jawaban pertama) ===
+# === User Manager ===
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     password_helper = PasswordHelper()
 
@@ -55,7 +38,14 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         super().__init__(user_db)
         self.session: AsyncSession = user_db.session
 
-    async def create(self, user_create: UserCreate, safe: bool = False, **kwargs) -> User:
+    # --- 2. PERBAIKAN DI SINI ---
+    async def create(
+        self,
+        user_create: UserCreate,
+        safe: bool = False,
+        request: Optional[Request] = None, # Tambahkan parameter 'request'
+    ) -> User:
+        # Isi fungsi ini tetap sama, hanya 'signature'-nya yang diubah
         create_dict = user_create.model_dump()
         hashed_password = self.password_helper.hash(create_dict["password"])
         create_dict["hashed_password"] = hashed_password
@@ -96,3 +86,4 @@ fastapi_users = FastAPIUsers[User, int](
 
 # === Dependency untuk endpoint ===
 current_active_user = fastapi_users.current_user(active=True)
+
