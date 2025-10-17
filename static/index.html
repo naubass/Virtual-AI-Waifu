@@ -10,6 +10,11 @@
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+    <!-- [BARU] Library untuk parsing Markdown dan Syntax Highlighting -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+
     <style>
         body { font-family: 'M PLUS Rounded 1c', sans-serif; scroll-behavior: smooth; }
         #chat-log::-webkit-scrollbar { width: 8px; }
@@ -56,6 +61,21 @@
         }
         #hero-image-container img.active {
             opacity: 1;
+        }
+        /* [BARU] Style untuk blok kode yang di-highlight */
+        pre {
+            background-color: #282c34; /* Warna latar belakang tema Atom One Dark */
+            color: #abb2bf;
+            padding: 0 !important; /* Hapus padding bawaan */
+            border-radius: 0.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        pre code.hljs {
+            padding: 1rem; /* Tambahkan padding di dalam elemen code */
         }
     </style>
 </head>
@@ -170,16 +190,16 @@
                     <p class="text-center text-gray-500 mb-6">Bergabunglah dengan <span class="brand-gradient font-bold">WaifuChat AI</span></p>
                      <div id="register-error" class="text-red-500 text-sm mb-4 text-center hidden h-5"></div>
                      <div class="space-y-4">
-                        <div><label for="register-nama" class="block mb-1 text-sm font-medium text-gray-600">Nama Lengkap</label><input type="text" id="register-nama" placeholder="Nama Kamu" class="w-full p-3 border border-gray-300 rounded-lg" required></div>
-                        <div><label for="register-nim" class="block mb-1 text-sm font-medium text-gray-600">NIM</label><input type="text" id="register-nim" placeholder="Nomor Induk Mahasiswa" class="w-full p-3 border border-gray-300 rounded-lg" required></div>
-                        <div><label for="register-email" class="block mb-1 text-sm font-medium text-gray-600">Email</label><input type="email" id="register-email" placeholder="Email aktif" class="w-full p-3 border border-gray-300 rounded-lg" required></div>
-                        <div>
-                            <label for="register-password" class="block mb-1 text-sm font-medium text-gray-600">Password</label>
-                            <div class="relative"><input type="password" id="register-password" placeholder="Buat password yang kuat" class="w-full p-3 border border-gray-300 rounded-lg" required><button type="button" onclick="togglePasswordVisibility('register-password')" class="absolute inset-y-0 right-0 px-4 text-gray-500 hover:text-pink-500"><i class="fas fa-eye"></i></button></div>
-                        </div>
-                        <button type="submit" class="w-full text-white font-bold py-3 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 transition transform hover:scale-105 shadow-lg">Register</button>
-                    </div>
-                    <p class="text-center text-sm mt-6">Sudah punya akun? <a href="#" id="show-login" class="font-bold text-purple-500 hover:underline">Login di sini</a></p>
+                         <div><label for="register-nama" class="block mb-1 text-sm font-medium text-gray-600">Nama Lengkap</label><input type="text" id="register-nama" placeholder="Nama Kamu" class="w-full p-3 border border-gray-300 rounded-lg" required></div>
+                         <div><label for="register-nim" class="block mb-1 text-sm font-medium text-gray-600">NIM</label><input type="text" id="register-nim" placeholder="Nomor Induk Mahasiswa" class="w-full p-3 border border-gray-300 rounded-lg" required></div>
+                         <div><label for="register-email" class="block mb-1 text-sm font-medium text-gray-600">Email</label><input type="email" id="register-email" placeholder="Email aktif" class="w-full p-3 border border-gray-300 rounded-lg" required></div>
+                         <div>
+                             <label for="register-password" class="block mb-1 text-sm font-medium text-gray-600">Password</label>
+                             <div class="relative"><input type="password" id="register-password" placeholder="Buat password yang kuat" class="w-full p-3 border border-gray-300 rounded-lg" required><button type="button" onclick="togglePasswordVisibility('register-password')" class="absolute inset-y-0 right-0 px-4 text-gray-500 hover:text-pink-500"><i class="fas fa-eye"></i></button></div>
+                         </div>
+                         <button type="submit" class="w-full text-white font-bold py-3 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 transition transform hover:scale-105 shadow-lg">Register</button>
+                     </div>
+                     <p class="text-center text-sm mt-6">Sudah punya akun? <a href="#" id="show-login" class="font-bold text-purple-500 hover:underline">Login di sini</a></p>
                 </form>
             </div>
         </div>
@@ -227,12 +247,14 @@
 
         function startHeroImageFader(waifus) {
             if (!heroImageContainer || !waifus || waifus.length === 0) return;
-            const images = waifus.sort(() => 0.5 - Math.random()).slice(0, 5).map(w => w.image);
+            // Gunakan placeholder jika gambar asli tidak ada
+            const images = waifus.sort(() => 0.5 - Math.random()).slice(0, 5).map(w => w.image || `https://placehold.co/320x320/fbcfe8/ec4899?text=${encodeURIComponent(w.name)}`);
             if (images.length === 0) return;
             heroImageContainer.innerHTML = '';
             images.forEach((src, index) => {
                 const img = document.createElement('img');
                 img.src = src;
+                img.onerror = () => { img.src = `https://placehold.co/320x320/fbcfe8/ec4899?text=Error`; };
                 if (index === 0) img.classList.add('active');
                 heroImageContainer.appendChild(img);
             });
@@ -300,7 +322,7 @@
                     if (errorData.detail) { errorMessage = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail); }
                     throw new Error(errorMessage);
                 }
-                alert('Registrasi berhasil! Silakan login.');
+                alert('Registrasi berhasil! Silakan login.'); // Menggunakan alert() karena ini bagian dari alur otentikasi
                 registerForm.reset();
                 showLoginBtn.click();
             } catch (error) {
@@ -405,6 +427,8 @@
                 }
             } catch (error) {
                 console.error("Gagal memuat data:", error.message);
+                 if (recommendationGrid) recommendationGrid.innerHTML = `<p class="text-red-500 col-span-full">Gagal memuat rekomendasi.</p>`;
+                 if (waifuGrid) waifuGrid.innerHTML = `<p class="text-red-500 col-span-full">Gagal memuat karakter.</p>`;
             }
         }
         
@@ -418,7 +442,8 @@
             waifus.forEach(waifu => {
                 const card = document.createElement('div');
                 card.className = 'w-80 group bg-white rounded-2xl shadow-lg transform hover:-translate-y-2 transition-all duration-300 hover:shadow-2xl hover:shadow-pink-200/50 hover:ring-2 hover:ring-pink-400';
-                card.innerHTML = `<div class="overflow-hidden rounded-t-2xl h-64"><img src="${waifu.image}" alt="${waifu.name}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out"></div><div class="p-6 flex flex-col items-center text-center"><h3 class="text-2xl font-bold mb-2 text-gray-800">${waifu.name}</h3><p class="text-gray-600 text-sm mb-6 h-16 leading-relaxed">${waifu.description}</p><button class="chat-btn w-full max-w-xs bg-pink-500 text-white font-bold py-3 px-4 rounded-full hover:bg-pink-600 transition-colors shadow-lg shadow-pink-500/30 hover:shadow-xl hover:shadow-pink-500/50">Chat Now</button></div>`;
+                const waifuImage = waifu.image || `https://placehold.co/320x256/fbcfe8/ec4899?text=${encodeURIComponent(waifu.name)}`;
+                card.innerHTML = `<div class="overflow-hidden rounded-t-2xl h-64"><img src="${waifuImage}" alt="${waifu.name}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out" onerror="this.onerror=null;this.src='https://placehold.co/320x256/fecaca/9f1239?text=Image+Error';"></div><div class="p-6 flex flex-col items-center text-center"><h3 class="text-2xl font-bold mb-2 text-gray-800">${waifu.name}</h3><p class="text-gray-600 text-sm mb-6 h-16 leading-relaxed">${waifu.description}</p><button class="chat-btn w-full max-w-xs bg-pink-500 text-white font-bold py-3 px-4 rounded-full hover:bg-pink-600 transition-colors shadow-lg shadow-pink-500/30 hover:shadow-xl hover:shadow-pink-500/50">Chat Now</button></div>`;
                 card.querySelector('.chat-btn').addEventListener('click', () => startChat(waifu));
                 gridElement.appendChild(card);
             });
@@ -426,20 +451,19 @@
         
         function startChat(character) {
             currentCharacter = character;
-            chatHeaderImg.src = character.image;
+            chatHeaderImg.src = character.image || `https://placehold.co/48x48/fbcfe8/ec4899?text=${character.name.charAt(0)}`;
             chatHeaderName.textContent = character.name;
             chatLog.innerHTML = '';
             if (!conversations[character.id]) {
                 conversations[character.id] = [{ role: 'ai', content: `Halo! Aku ${character.name}. Ada yang ingin kamu bicarakan?` }];
             }
-            conversations[character.id].forEach(message => addMessageToLog(message.role, message.content));
+            conversations[character.id].forEach(message => addMessageToLog(message.role, message.content, character.image));
             document.body.style.overflow = 'hidden';
             chatInterface.classList.remove('invisible', 'opacity-0');
             chatWindow.classList.remove('scale-95');
             messageInput.focus();
         }
         
-        // --- PERUBAHAN DI SINI ---
         async function closeModal() {
             if (!currentCharacter) return;
             chatInterface.classList.add('opacity-0');
@@ -453,14 +477,70 @@
             }, 300);
         }
 
-        function addMessageToLog(role, content) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `flex ${role === 'human' ? 'justify-end' : 'justify-start'}`;
+        // --- [FUNGSI YANG DIPERBARUI TOTAL] ---
+        function addMessageToLog(role, content, characterImage = null) {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = `flex items-end gap-3 ${role === 'human' ? 'justify-end' : 'justify-start'}`;
+        
+            // Menyiapkan avatar untuk AI
+            const avatarImgHtml = role === 'ai' && characterImage 
+                ? `<img src="${characterImage}" class="w-8 h-8 rounded-full object-cover flex-shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/32x32/e9d5ff/8b5cf6?text=AI';">` 
+                : '';
+        
             const contentDiv = document.createElement('div');
-            contentDiv.className = `max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${role === 'human' ? 'bg-pink-500 text-white rounded-br-none' : 'bg-white text-gray-800 rounded-bl-none shadow-md'}`;
-            contentDiv.textContent = content;
-            messageDiv.appendChild(contentDiv);
-            chatLog.appendChild(messageDiv);
+            contentDiv.className = `max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl break-words ${role === 'human' ? 'bg-pink-500 text-white rounded-br-none' : 'bg-white text-gray-800 rounded-bl-none shadow-md'}`;
+            
+            // Menggunakan marked.js untuk mem-parsing Markdown
+            contentDiv.innerHTML = marked.parse(content, { gfm: true, breaks: true });
+        
+            // Mengatur struktur HTML berdasarkan peran (human atau ai)
+            if (role === 'ai') {
+                messageWrapper.innerHTML = avatarImgHtml; // Tambahkan avatar dulu
+                messageWrapper.appendChild(contentDiv); // Lalu tambahkan bubble chat
+            } else {
+                messageWrapper.appendChild(contentDiv); // Untuk user, hanya bubble chat
+            }
+            
+            chatLog.appendChild(messageWrapper);
+        
+            // Proses blok kode setelah ditambahkan ke DOM
+            contentDiv.querySelectorAll('pre code').forEach((block) => {
+                // Buat wrapper untuk header & tombol copy
+                const preElement = block.parentElement;
+                const preWrapper = document.createElement('div');
+                preWrapper.className = 'relative group mt-2 mb-2';
+                
+                // Buat header untuk nama bahasa (jika ada)
+                const language = block.className.replace('language-', '');
+                const header = document.createElement('div');
+                header.className = 'bg-gray-800 text-gray-300 text-xs px-3 py-1.5 rounded-t-md flex justify-between items-center';
+                
+                const langSpan = document.createElement('span');
+                langSpan.textContent = language || 'code';
+                header.appendChild(langSpan);
+        
+                // Buat Tombol Copy
+                const copyButton = document.createElement('button');
+                copyButton.className = 'text-gray-400 hover:text-white transition-colors text-xs flex items-center gap-1.5';
+                copyButton.innerHTML = '<i class="far fa-copy"></i> Copy';
+                copyButton.onclick = () => {
+                    navigator.clipboard.writeText(block.textContent);
+                    copyButton.innerHTML = '<i class="fas fa-check text-green-400"></i> Copied!';
+                    setTimeout(() => {
+                        copyButton.innerHTML = '<i class="far fa-copy"></i> Copy';
+                    }, 2000);
+                };
+                header.appendChild(copyButton);
+        
+                // Atur ulang struktur DOM
+                preElement.parentNode.insertBefore(preWrapper, preElement);
+                preWrapper.appendChild(header);
+                preWrapper.appendChild(preElement);
+                
+                // Panggil highlight.js
+                hljs.highlightElement(block);
+            });
+        
             chatLog.scrollTop = chatLog.scrollHeight;
         }
 
@@ -490,12 +570,12 @@
                     })
                 });
                 
-                addMessageToLog('ai', response.content);
+                addMessageToLog('ai', response.content, currentCharacter.image);
                 conversations[currentCharacter.id].push({ role: 'ai', content: response.content });
                 
             } catch (error) {
                 console.error('Error sending message:', error);
-                addMessageToLog('ai', 'Sepertinya ada masalah koneksi. Coba lagi nanti.');
+                addMessageToLog('ai', 'Sepertinya ada masalah koneksi. Coba lagi nanti.', currentCharacter.image);
             } finally {
                 typingIndicator.remove();
             }
@@ -504,14 +584,22 @@
         function createTypingIndicator() {
             const messageDiv = document.createElement('div');
             messageDiv.id = 'typing-indicator';
-            messageDiv.className = 'flex justify-start';
+            messageDiv.className = 'flex justify-start items-end gap-3';
+            
+            const avatarImgHtml = currentCharacter && currentCharacter.image 
+                ? `<img src="${currentCharacter.image}" class="w-8 h-8 rounded-full object-cover flex-shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/32x32/e9d5ff/8b5cf6?text=AI';">` 
+                : '';
+
             const contentDiv = document.createElement('div');
             contentDiv.className = 'px-4 py-3 rounded-2xl bg-white text-gray-800 rounded-bl-none shadow-md';
             const typingDiv = document.createElement('div');
             typingDiv.className = 'typing-indicator';
             typingDiv.innerHTML = '<span></span><span></span><span></span>';
             contentDiv.appendChild(typingDiv);
+
+            messageDiv.innerHTML = avatarImgHtml;
             messageDiv.appendChild(contentDiv);
+            
             return messageDiv;
         }
 
@@ -529,4 +617,3 @@
     </script>
 </body>
 </html>
-

@@ -3,6 +3,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import List, Literal
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
 from sqlmodel import select
 from sqlalchemy.ext.asyncio.session import AsyncSession
@@ -18,6 +20,16 @@ from app.agent import chat_agent
 from langchain_core.messages import HumanMessage, AIMessage
 
 from fastapi.middleware.cors import CORSMiddleware
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """
+    Menangani event startup dan shutdown. Ini adalah cara modern pengganti on_event.
+    """
+    print("Startup: Membuat tabel database...")
+    await create_db_and_tables()
+    yield
+    print("Shutdown: Aplikasi dimatikan.")
 
 # Setup App
 app = FastAPI(title="WaifuChat AI")
@@ -123,9 +135,9 @@ app.mount("/", StaticFiles(directory="static", html=True), name="static")
 async def read_root():
     return FileResponse("static/index.html")
 
-@app.on_event("startup")
-async def on_startup():
-    await create_db_and_tables()
+# @app.on_event("startup")
+# async def on_startup():
+#     await create_db_and_tables()
 
 # run app
 if __name__ == "__main__":
